@@ -1,0 +1,46 @@
+[Unit]
+Description=发票AI自动排序整理系统
+Documentation=https://your-domain.com/docs
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=invoice-ai
+Group=invoice-ai
+WorkingDirectory=/opt/invoice-ai
+Environment=PATH=/opt/invoice-ai/venv/bin
+EnvironmentFile=/opt/invoice-ai/.env
+ExecStart=/opt/invoice-ai/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips '*'
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# 自动重启策略
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# 资源限制
+LimitNOFILE=65535
+MemoryLimit=2G
+CPUQuota=200%
+
+# 日志输出到systemd journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=invoice-ai
+
+# 安全加固
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/invoice-ai/uploads /opt/invoice-ai/backups /opt/invoice-ai/logs
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
